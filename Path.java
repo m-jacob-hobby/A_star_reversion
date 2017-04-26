@@ -10,6 +10,8 @@ import java.util.ArrayList;
 /**
  *
  * @author MJHobby
+ * @date 04/27/2017
+ * @title Path: Stores values for the A* calculated shortest distance path
  */
 public class Path {
     private ArrayList<Integer> coordinates = new ArrayList<Integer>();
@@ -18,7 +20,6 @@ public class Path {
     
     public Path(){
         position = 0;
-        
     }
     
 public void addCoordinates(int x, int y){
@@ -42,6 +43,15 @@ public void getNext(){
         this.end = true;
     }
     
+}
+
+public void getPrevious(){
+    if(this.position < coordinates.size() && this.position >= 0){
+        this.x = coordinates.get(position);
+        this.y = coordinates.get(position + 1);
+        
+        this.position += 2;
+    }
 }
 
 public boolean isEnd(){

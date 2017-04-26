@@ -5,19 +5,20 @@
  */
 package a_star_revert;
 
-import java.util.ArrayList;
 import java.util.PriorityQueue;
 
 /**
  *
  * @author MJHobby
+ * @date 04/27/2017
+ * @title Settings: houses key variables for A* algorithm and GUI construction
  */
 public class Settings {
     
     private PriorityQueue<Node> open;
     private boolean closed[][];
     private Node[][] grid;
-    private ArrayList<Integer> wallList;
+    private boolean[][] wallList;
     
     private Path navigation;
     private Mover computer;
@@ -27,9 +28,8 @@ public class Settings {
     private int startX;
     private int startY; // Computer start position x and y coordinates
     private int endX, endY;
-    private boolean play ,pause;
     
-    public Settings(int boardWidth, int boardHeight, int startX, int startY, int goalX, int goalY, ArrayList<Integer> walls){
+    public Settings(int boardWidth, int boardHeight, int startX, int startY, int goalX, int goalY, boolean[][] walls){
         this.width = boardWidth;
         this.height = boardHeight;
         setStart(startX, startY);
@@ -74,11 +74,11 @@ public class Settings {
         return endCoords;
     }
     
-    public void setWallList(ArrayList<Integer> walls){
+    public void setWallList(boolean[][] walls){
         this.wallList = walls;
     }
     
-    public ArrayList<Integer> getWallList(){
+    public boolean[][] getWallList(){
         return this.wallList;
     }
     

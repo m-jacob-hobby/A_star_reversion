@@ -8,6 +8,9 @@ package a_star_revert;
 /**
  *
  * @author MJHobby
+ * @date 04/27/2017
+ * @title Node: Stores variables associated with grid node properties and calculates 
+ *         the heuristic values for the node
  */
 public class Node {
  
@@ -28,10 +31,6 @@ public class Node {
         return "(" + this.x + ", " + this.y + ")";
     }
     
-    public static void setBlocked(Node n){
-        n = null;
-    }
-    
     public int getX(){
         return this.x;
     }
@@ -45,6 +44,6 @@ public class Node {
     }
     
     public void setHeuristic(int endX, int endY){
-        this.heuristicCost = Math.abs(x - endX)+Math.abs(y - endY);
+        this.heuristicCost = (Math.abs(x - endX) + Math.abs(y - endY)) * 10;
     }
 }

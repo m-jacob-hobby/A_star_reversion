@@ -8,11 +8,13 @@ package a_star_revert;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
 
 /**
  *
  * @author MJHobby
+ * @date 04/27/2017
+ * @title StartupPanel: Builds the JFrame that houses GUI. Runs A* algorithm code. Calls button functions.
+ *          sets values to Setting object
  */
 public class StartupPanel {
     
@@ -25,7 +27,7 @@ public class StartupPanel {
     private int height, width, wallCount, startX, startY, goalX, goalY;
     private boolean noPath, setStart, setGoal, finished, wait;
     private String actionMessage;
-    private ArrayList<Integer> walls = new ArrayList<Integer>();
+    private boolean[][] walls;
     private JLabel currentAction = new JLabel();
     private JLabel wallCounter = new JLabel();
     private JFrame pane = new JFrame();
@@ -44,6 +46,12 @@ public class StartupPanel {
         finished = false;
         wait = false;
         noPath = false;
+        walls = new boolean[w][h];
+        for(int i = 0; i < width; i++){
+            for(int j = 0; j < height; j++){
+                walls[i][j] = false;
+            }
+        }
     }
     
     // <editor-fold desc="JFRAME METHODS">
@@ -73,7 +81,7 @@ public class StartupPanel {
         
         // THIS WILL BUILD A HEIGHT X WIDTH GRID OF BUTTONS USER WILL USE TO SET WALLS
         for(int i = 0; i < height*width ; i++){
-            JButton button = new JButton(Integer.toString(i%10) + ", " + Integer.toString(i/10));
+            JButton button = new JButton(Integer.toString(i/10) + ", " + Integer.toString(i%10));
             button.setBackground(null);
             button.addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent e) {
@@ -122,11 +130,13 @@ public class StartupPanel {
         });
         nextButton.setEnabled(false);
         // Reset Button properties
-        resetButton.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e) {
-                resetFrame();
-            }
-        });
+        //resetButton.addActionListener(new ActionListener(){
+        //    public void actionPerformed(ActionEvent e) {
+        //        resetFrame();
+        //        boardPanel.hide();
+        //        buttonPanel.hide();
+        //    }
+        //});
         // </editor-fold>
 
         // ADD PROPERTIES TO JPANELS
@@ -145,7 +155,7 @@ public class StartupPanel {
         }
         // Add buttons to buttonPanel
         buttonPanel.add(nextButton);
-        buttonPanel.add(resetButton);
+        //buttonPanel.add(resetButton);
         // Add contents to the main panel
         mainPanel.add(boardPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -188,7 +198,7 @@ public class StartupPanel {
     // <editor-fold desc="BUTTON ACTION LISTENER METHODS">
     
     // Outputs debug map of grid, and calls the setOpen method
-    public void run(){ // int[] walls
+    public void run(){
             int[] startCoords = appSettings.getStart();
             int[] endCoords = appSettings.getEnd();
            
@@ -201,10 +211,15 @@ public class StartupPanel {
            appSettings.getGrid()[startCoords[0]][startCoords[1]].finalCost = 0;
            
            // Set walls cells. Simply set the cell values to null
-           for(int i=0; i < appSettings.getWallList().size() ; i+=2){
-               int x = appSettings.getWallList().get(i);
-               int y = appSettings.getWallList().get(i + 1);
-               appSettings.getGrid()[x][y] = null;
+           //for(int i=0; i < appSettings.getWallList().size() ; i+=2){
+            //   int x = appSettings.getWallList().get(i);
+            //   int y = appSettings.getWallList().get(i + 1);
+            //   appSettings.getGrid()[x][y] = null;
+           //}
+           for(int i = 0 ; i < width ; i++){
+               for (int j = 0; j < height ; j++){
+                   if(walls[i][j]) appSettings.getGrid()[i][j] = null;
+               }
            }
            
            setOpen();
@@ -215,7 +230,7 @@ public class StartupPanel {
            System.out.println(" O  ... Computer start position");
            System.out.println(" X  ... Goal position");
            System.out.println("/// ... Wall");
-           System.out.println(" #  ... Node cost");
+           System.out.println(" #  ... Cumulative travel cost");
            //Display initial map
            System.out.println("\nGrid: ");
             for(int x=0; x < appSettings.getWidth() ;++x){
@@ -253,6 +268,7 @@ public class StartupPanel {
             // </editor-fold>
     }
     
+    // Check all neighbors of current node and sets them to open if possible
     public void setOpen(){
         int[] startCoords = appSettings.getStart();
         int[] endCoords = appSettings.getEnd();
@@ -267,68 +283,77 @@ public class StartupPanel {
             if(current.equals(appSettings.getGrid()[endCoords[0]][endCoords[1]])){
                 return; 
             } 
-
-            Node n;  
-            if(current.getX() - 1 >= 0){
-                n = appSettings.getGrid()[current.getX() - 1][current.getY()];
-                findAndSetCosts(current, n, current.finalCost+VERT_HORIZ_COST); 
-
-                if(current.getY() - 1 >= 0){ //current.y-1 >= 0){                      
-                    n = appSettings.getGrid()[current.getX() - 1][current.getY() - 1];
-                    findAndSetCosts(current, n, current.finalCost+DIAGONAL_COST); 
+            
+            int nodeUp = current.getY() + 1;
+            int nodeDown = current.getY() - 1;
+            int nodeLeft = current.getX() - 1;
+            int nodeRight = current.getX() + 1;
+            Node nextNode;  
+            
+            // Moving in a semi-clockwise manner, add neighbors to open set
+            // Add all nodes right (immediate, one up, and one down) of current to open
+            if(nodeRight < appSettings.getWidth()){
+                // Upper right
+                if(nodeUp < appSettings.getWidth()){
+                   nextNode = appSettings.getGrid()[nodeRight][nodeUp];
+                    findAndSetCosts(current, nextNode, current.finalCost+DIAGONAL_COST); 
+                } 
+                // Right
+                nextNode = appSettings.getGrid()[nodeRight][current.getY()];
+                findAndSetCosts(current, nextNode, current.finalCost+VERT_HORIZ_COST); 
+                // Lower right
+                if(nodeDown >= 0){
+                    nextNode = appSettings.getGrid()[nodeRight][nodeDown];
+                    findAndSetCosts(current, nextNode, current.finalCost+DIAGONAL_COST); 
+                } 
+            }
+            
+            // Add node directly beneath to open
+            if(nodeDown >= 0){
+                nextNode = appSettings.getGrid()[current.getX()][nodeDown];
+                findAndSetCosts(current, nextNode, current.finalCost+VERT_HORIZ_COST); 
+            }
+            
+            // Add all nodes left (immediate, one up, and one down) of current to open
+            if(nodeLeft >= 0){
+                // Lower left
+                if(nodeDown >= 0){                     
+                    nextNode = appSettings.getGrid()[nodeLeft][nodeDown];
+                    findAndSetCosts(current, nextNode, current.finalCost+DIAGONAL_COST); 
                 }
-
-                if(current.getY() + 1 < appSettings.getWidth()){ //current.y+1 < grid[0].length){
-                    n =appSettings.getGrid()[current.getX() - 1][current.getY() + 1];
-                    findAndSetCosts(current, n, current.finalCost+DIAGONAL_COST); 
+                // Left
+                nextNode = appSettings.getGrid()[nodeLeft][current.getY()];
+                findAndSetCosts(current, nextNode, current.finalCost+VERT_HORIZ_COST); 
+                // Upper left
+                if(nodeUp < appSettings.getWidth()){
+                    nextNode =appSettings.getGrid()[nodeLeft][nodeUp];
+                    findAndSetCosts(current, nextNode, current.finalCost+DIAGONAL_COST); 
                 }
             } 
 
-            if(current.getY() - 1 >= 0){//current.y-1 >= 0){
-                n = appSettings.getGrid()[current.getX()][current.getY() - 1];
-                findAndSetCosts(current, n, current.finalCost+VERT_HORIZ_COST); 
+            // Add node directly above to open
+            if(nodeUp < appSettings.getWidth()){
+                nextNode = appSettings.getGrid()[current.getX()][nodeUp];
+                findAndSetCosts(current, nextNode, current.finalCost+VERT_HORIZ_COST); 
             }
 
-            if(current.getY() + 1 < appSettings.getWidth()){//current.y+1 < grid[0].length){
-                n = appSettings.getGrid()[current.getX()][current.getY() + 1];
-                findAndSetCosts(current, n, current.finalCost+VERT_HORIZ_COST); 
-            }
-
-            if(current.getX() + 1 < appSettings.getWidth()){ //current.x+1 < grid.length){
-                n = appSettings.getGrid()[current.getX() + 1][current.getY()];
-                findAndSetCosts(current, n, current.finalCost+VERT_HORIZ_COST); 
-
-                if(current.getY() - 1 >= 0){//current.y-1 >= 0){
-                    n = appSettings.getGrid()[current.getX() + 1][current.getY() - 1];
-                    findAndSetCosts(current, n, current.finalCost+DIAGONAL_COST); 
-                }
-                
-                if(current.getY() + 1 < appSettings.getWidth()){ //current.y+1 < grid[0].length){
-                   n = appSettings.getGrid()[current.getX() + 1][current.getY() + 1];
-                    findAndSetCosts(current, n, current.finalCost+DIAGONAL_COST); 
-                }  
-            }
+            
         } 
     }
     
-    /*
-        @params:
-            current: current node being tested
-            t: the next node of the path
-            cost: the cost of total travel to current
-    */
-    public void findAndSetCosts(Node current, Node t, int cost){
+    // Given current node, neighbor node, and cost of movement between, sets neighbor final cost and add to open
+    public void findAndSetCosts(Node current, Node neighbor, int cost){
         // Add to closed if null node
-        if(t == null || appSettings.getClosedSet()[t.getX()][t.getY()])return;
+        if(neighbor == null || appSettings.getClosedSet()[neighbor.getX()][neighbor.getY()])return;
         
         // Get cost and find if node in open set
-        int tFinalCost = t.heuristicCost + cost;
-        boolean inOpen = appSettings.getOpenSet().contains(t);
+        int neighborFinalCost = neighbor.heuristicCost + cost;
+        boolean inOpen = appSettings.getOpenSet().contains(neighbor);
         
-        if(!inOpen || tFinalCost < t.finalCost){
-            t.finalCost = tFinalCost;
-            t.parent = current;
-            if(!inOpen)appSettings.getOpenSet().add(t);
+        if(!inOpen || neighborFinalCost < neighbor.finalCost){
+            neighbor.finalCost = neighborFinalCost;
+            neighbor.parent = current;
+            if(!inOpen)appSettings.getOpenSet().add(neighbor);
         }
     }
     
@@ -347,6 +372,7 @@ public class StartupPanel {
         return stillEnabled;
     }
    
+    // Given current status of board, fill in the grid by values in board
     public void drawBoard(JLabel[][] board){
         for (int x = 0 ; x < width ; x++){
             for (int y = 0 ; y < height ; y++){
@@ -370,9 +396,15 @@ public class StartupPanel {
         }
         
         if(!appSettings.equals(null)){
-            for(int i = 0; i < appSettings.getWallList().size() ; i+= 2){
-                board[appSettings.getWallList().get(i)][appSettings.getWallList().get(i+1)].setBackground(Color.BLACK);
-            }
+            for(int i = 0 ; i < width ; i++){
+               for (int j = 0; j < height ; j++){
+                   if(walls[i][j]) board[i][j].setBackground(Color.BLACK);
+               }
+           }
+            
+            //for(int i = 0; i < appSettings.getWallList().size() ; i+= 2){
+            //    board[appSettings.getWallList().get(i)][appSettings.getWallList().get(i+1)].setBackground(Color.BLACK);
+            //}
         }
     }
 
@@ -386,17 +418,16 @@ public class StartupPanel {
             if(!button.isBackgroundSet()){                                      // User selected grid to be a new wall space
                 button.setBackground(Color.BLACK);
                 wallCount--;
-                walls.add(getXCoordinate(button.getText()));                    // add next x coordinate
-                walls.add(getYCoordinate(button.getText()));                    // add next y coordinate
+                walls[getXCoordinate(button.getText())][getYCoordinate(button.getText())] = true;
                 if(wallCount == 0) {
                     setStart = true;
                     actionMessage = "Set the start position!";
                 }
-            } else {                                                            // User wants to change wall back to traversable grid
+            } else {  
+                wallCount++;                                                    // User wants to change wall back to traversable grid
                 button.setBackground(null);
-                walls.remove(walls.size() - 1);                                 // most recent y
-                walls.remove(walls.size() - 2);                                 // most recent x
-                wallCount++;
+                walls[getXCoordinate(button.getText())][getYCoordinate(button.getText())] = false;
+                
             }
         }else if(setStart){                                                     // User selects start position
             actionMessage = "Set the start position!";
@@ -460,26 +491,6 @@ public class StartupPanel {
    
     public boolean getWait(){
         return this.wait;
-    }
-    
-    public int getStartX(){
-        return startX;
-    }
-    
-    public int getStartY(){
-        return startY;
-    }
-    
-    public int getGoalX(){
-        return goalX;
-    }
-    
-    public int getGoalY(){
-        return goalY;
-    }
-    
-    public ArrayList<Integer> getWalls(){
-        return walls;
     }
     
     // </editor-fold>

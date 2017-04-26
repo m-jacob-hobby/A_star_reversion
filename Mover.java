@@ -8,6 +8,8 @@ package a_star_revert;
 /**
  *
  * @author MJHobby
+ * @date 04/27/2017
+ * @title Mover: Stores position and updates position of object traversing Path
  */
 public class Mover {
     

@@ -8,14 +8,15 @@ package a_star_revert;
 import javax.swing.*;
 
 /**
- *
+ *  
  * @author MJHobby
+ * @date 04/27/2017
+ * @title A* application main page. Initializes StartupPanel as user sets initial values
  */
 public class A_Star_App extends JFrame {
 
     public static final int WIDTH = 10;
     public static final int HEIGHT = 10;
-
 
     /**
      * @param args the command line arguments
