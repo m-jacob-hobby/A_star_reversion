@@ -23,24 +23,25 @@ public class Path {
     }
     
 public void addCoordinates(int x, int y){
-    this.coordinates.add(x);
-    this.coordinates.add(y);
+    coordinates.add(x);
+    coordinates.add(y);
 }
 
 public void close(){
-    this.position = this.coordinates.size()-1;
+    position = coordinates.size()-1;
 }
 
 public void getNext(){
 
-    if (this.position >= 1){
-        this.y = coordinates.get(position);
-        this.x = coordinates.get(position - 1);
+    if (position >= 1){
+        y = coordinates.get(position);
+        x = coordinates.get(position - 1);
     
-        this.position -= 2;
+        position -= 2;
+        if (position < 1) end = true;
     } else {
-        this.position = 0;
-        this.end = true;
+        position = 0;
+        end = true;
     }
     
 }
@@ -55,15 +56,15 @@ public void getPrevious(){
 }
 
 public boolean isEnd(){
-    return this.end;
+    return end;
 }
 
 public int getX(){
-    return this.x;
+    return x;
 }
 
 public int getY(){
-    return this.y;
+    return y;
 }
     
     

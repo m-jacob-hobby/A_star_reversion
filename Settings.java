@@ -91,8 +91,8 @@ public class Settings {
                 Node c1 = (Node)o1;
                 Node c2 = (Node)o2;
 
-                return c1.finalCost < c2.finalCost?-1:
-                        c1.finalCost > c2.finalCost?1:0;
+                return c1.getFinalCost() < c2.getFinalCost()?-1:
+                        c1.getFinalCost() > c2.getFinalCost()?1:0;
             }); 
     }
     

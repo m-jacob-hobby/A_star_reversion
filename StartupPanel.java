@@ -208,7 +208,7 @@ public class StartupPanel {
                   appSettings.getGrid()[x][y].setHeuristic(endCoords[0], endCoords[1]);
               }
            }
-           appSettings.getGrid()[startCoords[0]][startCoords[1]].finalCost = 0;
+           appSettings.getGrid()[startCoords[0]][startCoords[1]].setFinalCost(0);
            
            // Set walls cells. Simply set the cell values to null
            //for(int i=0; i < appSettings.getWallList().size() ; i+=2){
@@ -230,14 +230,14 @@ public class StartupPanel {
            System.out.println(" O  ... Computer start position");
            System.out.println(" X  ... Goal position");
            System.out.println("/// ... Wall");
-           System.out.println(" #  ... Cumulative travel cost");
+           System.out.println(" #  ... Node cost");
            //Display initial map
            System.out.println("\nGrid: ");
             for(int x=0; x < appSettings.getWidth() ;++x){
                 for(int y=0; y < appSettings.getHeight() ;++y){
                    if(x == startCoords[0] && y == startCoords[1])System.out.print(" O  ");        //Start point
                    else if(x == endCoords[0] && y == endCoords[1])System.out.print(" X  ");     //Goal
-                   else if(appSettings.getGrid()[x][y]!=null)System.out.printf("%-3d ", appSettings.getGrid()[x][y].finalCost);
+                   else if(appSettings.getGrid()[x][y]!=null)System.out.printf("%-3d ", appSettings.getGrid()[x][y].getFinalCost());
                    else System.out.print("/// "); 
                 }
                 System.out.println();
@@ -253,10 +253,10 @@ public class StartupPanel {
                 //path.push(current);
                 appSettings.getNavigation().addCoordinates(endCoords[0], endCoords[1]);
                 System.out.println("1. " + current);
-                while(current.parent!=null){
+                while(current.getParent()!=null){
                     pathCounter++;
-                    System.out.println(pathCounter + ". " +current.parent);
-                    current = current.parent;
+                    System.out.println(pathCounter + ". " +current.getParent());
+                    current = current.getParent();
                     appSettings.getNavigation().addCoordinates(current.getX(), current.getY());
                 } 
                 appSettings.getNavigation().close();
@@ -296,22 +296,22 @@ public class StartupPanel {
                 // Upper right
                 if(nodeUp < appSettings.getWidth()){
                    nextNode = appSettings.getGrid()[nodeRight][nodeUp];
-                    findAndSetCosts(current, nextNode, current.finalCost+DIAGONAL_COST); 
+                    findAndSetCosts(current, nextNode, current.getMovementCost() + DIAGONAL_COST); // finalCost+DIAGONAL_COST); 
                 } 
                 // Right
                 nextNode = appSettings.getGrid()[nodeRight][current.getY()];
-                findAndSetCosts(current, nextNode, current.finalCost+VERT_HORIZ_COST); 
+                findAndSetCosts(current, nextNode, current.getMovementCost() + VERT_HORIZ_COST); //.finalCost+VERT_HORIZ_COST); 
                 // Lower right
                 if(nodeDown >= 0){
                     nextNode = appSettings.getGrid()[nodeRight][nodeDown];
-                    findAndSetCosts(current, nextNode, current.finalCost+DIAGONAL_COST); 
+                    findAndSetCosts(current, nextNode, current.getMovementCost() + DIAGONAL_COST); //finalCost+DIAGONAL_COST); 
                 } 
             }
             
             // Add node directly beneath to open
             if(nodeDown >= 0){
                 nextNode = appSettings.getGrid()[current.getX()][nodeDown];
-                findAndSetCosts(current, nextNode, current.finalCost+VERT_HORIZ_COST); 
+                findAndSetCosts(current, nextNode, current.getMovementCost() + VERT_HORIZ_COST); //finalCost+VERT_HORIZ_COST); 
             }
             
             // Add all nodes left (immediate, one up, and one down) of current to open
@@ -319,22 +319,22 @@ public class StartupPanel {
                 // Lower left
                 if(nodeDown >= 0){                     
                     nextNode = appSettings.getGrid()[nodeLeft][nodeDown];
-                    findAndSetCosts(current, nextNode, current.finalCost+DIAGONAL_COST); 
+                    findAndSetCosts(current, nextNode, current.getMovementCost() + DIAGONAL_COST); //.finalCost+DIAGONAL_COST); 
                 }
                 // Left
                 nextNode = appSettings.getGrid()[nodeLeft][current.getY()];
-                findAndSetCosts(current, nextNode, current.finalCost+VERT_HORIZ_COST); 
+                findAndSetCosts(current, nextNode, current.getMovementCost() + VERT_HORIZ_COST); //.finalCost+VERT_HORIZ_COST); 
                 // Upper left
                 if(nodeUp < appSettings.getWidth()){
                     nextNode =appSettings.getGrid()[nodeLeft][nodeUp];
-                    findAndSetCosts(current, nextNode, current.finalCost+DIAGONAL_COST); 
+                    findAndSetCosts(current, nextNode, current.getMovementCost() + DIAGONAL_COST); //.finalCost+DIAGONAL_COST); 
                 }
             } 
 
             // Add node directly above to open
             if(nodeUp < appSettings.getWidth()){
                 nextNode = appSettings.getGrid()[current.getX()][nodeUp];
-                findAndSetCosts(current, nextNode, current.finalCost+VERT_HORIZ_COST); 
+                findAndSetCosts(current, nextNode, current.getMovementCost() + VERT_HORIZ_COST); 
             }
 
             
@@ -342,17 +342,17 @@ public class StartupPanel {
     }
     
     // Given current node, neighbor node, and cost of movement between, sets neighbor final cost and add to open
-    public void findAndSetCosts(Node current, Node neighbor, int cost){
-        // Add to closed if null node
+    public void findAndSetCosts(Node current, Node neighbor, int MovementCost){
+        // if the neighbor is null (a wall) or in closed set than exit method
         if(neighbor == null || appSettings.getClosedSet()[neighbor.getX()][neighbor.getY()])return;
         
         // Get cost and find if node in open set
-        int neighborFinalCost = neighbor.heuristicCost + cost;
+        int neighborFinalCost = neighbor.getHeuristic() + MovementCost;
         boolean inOpen = appSettings.getOpenSet().contains(neighbor);
         
-        if(!inOpen || neighborFinalCost < neighbor.finalCost){
-            neighbor.finalCost = neighborFinalCost;
-            neighbor.parent = current;
+        if(!inOpen || neighborFinalCost < neighbor.getFinalCost()){
+            neighbor.setFinalCost(neighborFinalCost); // = neighborFinalCost;
+            neighbor.setParent(current); // = current;
             if(!inOpen)appSettings.getOpenSet().add(neighbor);
         }
     }
